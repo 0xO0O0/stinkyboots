@@ -1,0 +1,34 @@
+# Helix configuration file.
+#
+# For more information, visit https://docs.helix-editor.com/configuration.html.
+
+theme = "solarized_light"
+
+[editor]
+auto-pairs = false
+color-modes = true
+cursorline = true
+
+[editor.cursor-shape]
+insert = "bar"
+normal = "bar"
+select = "bar"
+
+[editor.file-picker]
+git-ignore = true
+hidden = false
+
+[editor.indent-guides]
+render = true
+
+[editor.statusline]
+center = []
+left = ["mode", "spinner", "file-name"]
+right = ["diagnostics", "selections", "position", "file-line-ending"]
+separator = "│"
+
+[keys.normal]
+j = "move_char_left"
+k = "move_line_down"
+l = "move_line_up"
+";" = "move_char_right"

@@ -1,0 +1,24 @@
+# Ansible Galaxy collection metadata file.
+#
+# For more information, visit
+# https://docs.ansible.com/ansible/latest/dev_guide/collections_galaxy_meta.html#collections-galaxy-meta.
+
+authors:
+  - Macklan Weinstein <macklan.weinstein@gmail.com>
+dependencies:
+  chocolatey.chocolatey: ">=1.1.0"
+  community.general: ">=4.0.0"
+  community.windows: ">=1.9.0"
+description: software installers
+documentation: http://0xO0O0.github.io/bootware
+homepage: http://github.com/0xO0O0/stinkyboots
+issues: http://github.com/0xO0O0/stinkyboots/issues
+license:
+  - MIT
+name: bootware
+namespace: 0xO0O0
+readme: README.md
+repository: http://github.com/0xO0O0/stinkyboots
+tags:
+  - install
+version: "0.5.0"

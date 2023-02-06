@@ -1,0 +1,141 @@
+---
+- name: Install Docker for Alpine
+  become: true
+  community.general.apk:
+    name: docker
+  when: ansible_pkg_mgr == "apk"
+
+- name: Install Docker for Arch
+  become: true
+  community.general.pacman:
+    name: docker
+  when: ansible_pkg_mgr == "pacman"
+
+- name: Install Docker repository dependencies for Debian
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+  become: true
+  when: ansible_pkg_mgr == "apt"
+
+- name: Download Docker GPG key for Debian
+  ansible.builtin.get_url:
+    dest: /tmp/docker-archive-keyring.gpg
+    mode: "644"
+    url: https://download.docker.com/linux/gpg
+  become: true
+  when: ansible_pkg_mgr == "apt"
+
+- name: Add Docker GPG key for Debian
+  ansible.builtin.command:
+    cmd: >-
+      gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+      /tmp/docker-archive-keyring.gpg
+    creates: /usr/share/keyrings/docker-archive-keyring.gpg
+  become: true
+  when: ansible_pkg_mgr == "apt"
+
+- name: Add Docker repository for Debian
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch={{ system_architecture }}
+      signed-by=/usr/share/keyrings/docker-archive-keyring.gpg]
+      https://download.docker.com/linux/{{ deb_distro_base }} {{
+      ansible_distribution_release | lower }} stable
+    state: present
+    filename: docker
+  become: true
+  when: ansible_pkg_mgr == "apt"
+
+- name: Install Docker for Debian
+  ansible.builtin.apt:
+    name:
+      - containerd.io
+      - docker-ce
+      - docker-ce-cli
+    update_cache: true
+  become: true
+  when: ansible_pkg_mgr == "apt"
+
+- name: Add Docker repository for Fedora
+  ansible.builtin.get_url:
+    dest: /etc/yum.repos.d/docker-ce.repo
+    mode: "644"
+    url: https://download.docker.com/linux/fedora/docker-ce.repo
+  become: true
+  when: ansible_pkg_mgr == "dnf"
+
+- name: Install Docker for Fedora
+  ansible.builtin.dnf:
+    name:
+      - containerd.io
+      - docker-ce
+      - docker-ce-cli
+  become: true
+  when: ansible_pkg_mgr == "dnf"
+
+- name: Install Docker for FreeBSD
+  become: true
+  community.general.pkgng:
+    name: docker
+  when: ansible_system == "FreeBSD"
+
+- name: Install Docker for MacOS
+  community.general.homebrew_cask:
+    accept_external_apps: true
+    name: docker
+    state: present
+  when: ansible_system == "Darwin"
+
+- name: Install Docker for Windows
+  chocolatey.chocolatey.win_chocolatey:
+    name: docker-desktop
+  when: ansible_system == "Win32NT"
+
+- name: Check if systemd is available for Linux
+  ansible.builtin.stat:
+    path: /usr/bin/systemctl
+  register: systemd_available
+  when: ansible_system == "Linux"
+
+- name: Start Containerd on system boot for Linux
+  ansible.builtin.systemd:
+    enabled: true
+    name: containerd
+  become: true
+  when: ansible_system == "Linux" and systemd_available.stat.exists
+
+- name: Start Docker on system boot for Linux
+  ansible.builtin.systemd:
+    enabled: true
+    name: docker
+  become: true
+  when: ansible_system == "Linux" and systemd_available.stat.exists
+
+- name: Add user to Docker group for Linux
+  ansible.builtin.user:
+    append: true
+    name: "{{ ansible_user_id }}"
+    groups:
+      - docker
+  become: true
+  when: ansible_system == "Linux" and systemd_available.stat.exists
+
+- name: Create Fish completions directory for Unix
+  ansible.builtin.file:
+    mode: "755"
+    owner: "{{ ansible_user_id }}"
+    path: "{{ ansible_env.HOME }}/.config/fish/completions"
+    state: directory
+  when: ansible_system != "Win32NT"
+
+- name: Install Docker Fish shell completions for Unix
+  ansible.builtin.get_url:
+    dest: "{{ ansible_env.HOME }}/.config/fish/completions/docker.fish"
+    mode: "664"
+    owner: "{{ ansible_user_id }}"
+    url: https://raw.githubusercontent.com/docker/cli/master/contrib/completion/fish/docker.fish
+  when: ansible_system != "Win32NT"

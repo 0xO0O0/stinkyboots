@@ -1,0 +1,353 @@
+# GitHub Actions workflow file.
+#
+# For more information, visit
+# https://docs.github.com/actions/learn-github-actions.
+
+---
+name: test
+
+# Trigger workflow on push or pull request to the develop, main, and master
+# branches.
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+      - master
+  push:
+    branches:
+      - develop
+      - main
+      - master
+  workflow_dispatch:
+    inputs:
+      debug:
+        default: "false"
+        description: Use TMate session for debugging on failure
+        required: false
+      os:
+        default: alpine arch debian fedora freebsd macos suse ubuntu windows
+        description: Space separated list of operating systems
+        required: false
+
+jobs:
+  test-alpine:
+    name: Test bootstrapping software for Amd64 Alpine Linux
+    if: >-
+      ${{ github.event_name != 'workflow_dispatch' ||
+      contains(github.event.inputs.os, 'alpine') }}
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Build Docker image
+        uses: docker/build-push-action@v2
+        with:
+          build-args: test=true
+          context: .
+          file: ./tests/integration/alpine.Dockerfile
+          platforms: linux/amd64
+          push: false
+          tags: scruffaluff/bootware:alpine-latest
+      - name: Setup tmate session if job failed
+        if: >-
+          ${{ failure() && github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.debug == 'true' }}
+        timeout-minutes: 60
+        uses: mxschmitt/action-tmate@v3
+
+  test-arch:
+    name: Test bootstrapping software for Amd64 Arch Linux
+    if: >-
+      ${{ github.event_name != 'workflow_dispatch' ||
+      contains(github.event.inputs.os, 'arch') }}
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Build Docker image
+        uses: docker/build-push-action@v2
+        with:
+          build-args: test=true
+          context: .
+          file: ./tests/integration/arch.Dockerfile
+          platforms: linux/amd64
+          push: false
+          tags: scruffaluff/bootware:arch-latest
+      - name: Setup tmate session if job failed
+        if: >-
+          ${{ failure() && github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.debug == 'true' }}
+        timeout-minutes: 60
+        uses: mxschmitt/action-tmate@v3
+
+  test-debian:
+    name: Test bootstrapping software for Amd64 Debian Linux
+    if: >-
+      ${{ github.event_name != 'workflow_dispatch' ||
+      contains(github.event.inputs.os, 'debian') }}
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Build Docker image
+        uses: docker/build-push-action@v2
+        with:
+          build-args: test=true
+          context: .
+          file: ./tests/integration/debian.Dockerfile
+          platforms: linux/amd64
+          push: false
+          tags: scruffaluff/bootware:debian-latest
+      - name: Setup tmate session if job failed
+        if: >-
+          ${{ failure() && github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.debug == 'true' }}
+        timeout-minutes: 60
+        uses: mxschmitt/action-tmate@v3
+
+  test-fedora:
+    name: Test bootstrapping software for Amd64 Fedora Linux
+    if: >-
+      ${{ github.event_name != 'workflow_dispatch' ||
+      contains(github.event.inputs.os, 'fedora') }}
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Build Docker image
+        uses: docker/build-push-action@v2
+        with:
+          build-args: test=true
+          context: .
+          file: ./tests/integration/fedora.Dockerfile
+          platforms: linux/amd64
+          push: false
+          tags: scruffaluff/bootware:fedora-latest
+      - name: Setup tmate session if job failed
+        if: >-
+          ${{ failure() && github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.debug == 'true' }}
+        timeout-minutes: 60
+        uses: mxschmitt/action-tmate@v3
+
+  test-freebsd:
+    name: Test bootstrapping software for Amd64 FreeBSD
+    if: >-
+      ${{ github.event_name != 'workflow_dispatch' ||
+      contains(github.event.inputs.os, 'freebsd') }}
+    runs-on: macos-12
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v2
+      - name: Test installation, setup, and bootstrapping
+        uses: vmactions/freebsd-vm@v0.3.0
+        with:
+          prepare: |
+            sudo freebsd-update fetch
+            sudo freebsd-update install
+            pkg install -y bash curl
+          release: "13.1"
+          # Vagrant is not tested temporarily since FreeBSD vagrant package
+          # installs Ruby net-sftp dependency with version 4 while needing
+          # version 3. Termshark is installed at /usr/local/bin/termshark on
+          # FreeBSD in the job's VM, which is in the system path. No idea why
+          # the test suite cannot find it.
+          run: |
+            set -eou pipefail
+            ./install.sh
+            ./bootware.sh setup
+            ./bootware.sh bootstrap --dev --no-passwd --retries 3 --tags desktop,extras
+            bash -c 'source $HOME/.bashrc && ./tests/integration/roles_test.ts --arch amd64 --skip vagrant,termshark freebsd'
+          usesh: true
+      # To login into the FreeBSD VM from the MacOS runner, execute `ssh -t
+      # freebsd` and `cd /root/work/bootware/bootware`.
+      - name: Setup tmate session if job failed
+        if: >-
+          ${{ failure() && github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.debug == 'true' }}
+        timeout-minutes: 60
+        uses: mxschmitt/action-tmate@v3
+
+  test-macos:
+    name: Test bootstrapping software for Amd64 MacOS
+    if: >-
+      ${{ github.event_name != 'workflow_dispatch' ||
+      contains(github.event.inputs.os, 'macos') }}
+    runs-on: macos-12
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v2
+      - name: Install Bootware
+        run: |
+          ./install.sh
+          sudo cp bootware.sh $(which bootware)
+      # Brew installation causes ModuleNotFound ansible.plugins.filter errors.
+      - name: >-
+          Install Ansible with Python since Brew installation appears to be
+          broken
+        run: python3 -m pip install ansible
+      - name: Install dependencies for Bootware
+        run: bootware setup
+      # Github actions MacOS VM has issues where the first homebrew upgrade
+      # often fails with kmutil virtualization errors.
+      - name: Initialize Brew to avoid weird GitHub actions error
+        continue-on-error: true
+        run: bootware bootstrap --dev --no-passwd --tags update
+      # Bats is already installed with NPM and causes a conflict. Docker is not
+      # installable on the GitHub MacOS VM.
+      - name: Test bootstrapping
+        run: >-
+          bootware bootstrap --dev --no-passwd --retries 3 --skip bats,docker
+          --tags desktop,extras
+      # Ruby Tilt is already installed and the VM's shell is configured to point
+      # to the Ruby executable even after it is removed and another Tilt
+      # exectuable is installed. Since Docker is not installable, the Docker
+      # Compose check will fail.
+      - name: Test installed binaries for roles
+        run: |
+          source ${HOME}/.bashrc
+          node tests/integration/roles.spec.js --arch amd64 --skip bats,docker,docker_compose,tilt macos
+      - name: Setup tmate session if job failed
+        if: >-
+          ${{ failure() && github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.debug == 'true' }}
+        timeout-minutes: 60
+        uses: mxschmitt/action-tmate@v3
+
+  test-suse:
+    name: Test bootstrapping software for Amd64 Suse Linux
+    if: >-
+      ${{ github.event_name == 'workflow_dispatch' &&
+      contains(github.event.inputs.os, 'suse') }}
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Build Docker image
+        uses: docker/build-push-action@v2
+        with:
+          build-args: test=true
+          context: .
+          file: ./tests/integration/suse.Dockerfile
+          platforms: linux/amd64
+          push: false
+          tags: scruffaluff/bootware:suse-latest
+      - name: Setup tmate session if job failed
+        if: >-
+          ${{ failure() && github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.debug == 'true' }}
+        timeout-minutes: 60
+        uses: mxschmitt/action-tmate@v3
+
+  test-ubuntu:
+    name: Test bootstrapping software for Amd64 Ubuntu Linux
+    if: >-
+      ${{ github.event_name != 'workflow_dispatch' ||
+      contains(github.event.inputs.os, 'ubuntu') }}
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Build Docker image
+        uses: docker/build-push-action@v2
+        with:
+          build-args: test=true
+          context: .
+          file: ./tests/integration/ubuntu.Dockerfile
+          platforms: linux/amd64
+          push: false
+          tags: scruffaluff/bootware:ubuntu-22.04
+      - name: Setup tmate session if job failed
+        if: >-
+          ${{ failure() && github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.debug == 'true' }}
+        timeout-minutes: 60
+        uses: mxschmitt/action-tmate@v3
+
+  test-windows:
+    name: Test bootstrapping software for Amd64 Windows
+    if: >-
+      ${{ github.event_name != 'workflow_dispatch' ||
+      contains(github.event.inputs.os, 'windows') }}
+    runs-on: windows-2022
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v2
+      - name: Get current branch
+        id: branch
+        uses: tj-actions/branch-names@v4
+      - uses: Vampire/setup-wsl@v1
+        with:
+          distribution: Ubuntu-20.04
+          set-as-default: "true"
+      - name: Install Bootware
+        run: |
+          ./install.ps1 --version ${{ steps.branch.outputs.current_branch }}
+          Copy-Item "./bootware.ps1" -Destination "C:/Program Files/Bootware/bootware.ps1"
+        shell: powershell
+      # The GitHub Windows server does not seem to update its path correctly.
+      # Appears to work on other Windows servers.
+      - name: Install dependencies for Bootware
+        run: |
+          $Env:Path = "C:\Program Files\Bootware;$Env:Path"
+          bootware setup --checkout ${{ steps.branch.outputs.current_branch }}
+        shell: powershell
+      - name: Log all firewall rules on Windows host
+        run: Get-NetFirewallRule -All
+        shell: powershell
+      # IdentitiesOnly is required to avoid an infinite wait for user password
+      # input if the private key is rejected. Localhost is used since
+      # Vampire/setup-wsl@v1 sets up WSL version 1.
+      - name: Test SSH connection from WSL to Windows host
+        run: >-
+          wsl ssh -vvv -i '$HOME/.ssh/bootware' -o IdentitiesOnly=yes -o
+          StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+          $Env:UserName@127.0.0.1 dir
+        shell: powershell
+      - name: Copy Bootware configuration file
+        run: |
+          $Env:Path = "C:\Program Files\Bootware;$Env:Path"
+          bootware config --empty
+        shell: powershell
+      - name: Test bootstrapping
+        run: |
+          $Env:Path = "C:\Program Files\Bootware;$Env:Path"
+          bootware bootstrap --no-setup --retries 3
+        shell: powershell
+      # The GitHub Windows server does not seem to update its path correctly.
+      # Appears to work on other Windows servers.
+      - name: Test installed binaries for roles
+        run: |
+          $Env:Path = "C:\Program Files\Datree;$HOME\.krew\bin;$HOME\scoop\shims;$Env:LocalAppData\Programs\mongosh;$Env:Path"
+          node tests/integration/roles.spec.js --arch amd64 windows --tags desktop,extras
+      - name: Setup tmate session if job failed
+        if: >-
+          ${{ failure() && github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.debug == 'true' }}
+        timeout-minutes: 60
+        uses: mxschmitt/action-tmate@v3

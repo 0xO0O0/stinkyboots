@@ -1,0 +1,26 @@
+---
+- name: Install Windows Terminal for Windows
+  community.windows.win_scoop:
+    name: windows-terminal
+  when: ansible_system == "Win32NT" and "Windows 10" in ansible_distribution
+
+# Configuration file can be in multiple locations depending on package installer
+# and Windows version.
+- name: Create Windows Terminal configuration directories for Windows
+  ansible.windows.win_file:
+    path: "{{ ansible_env.HOME }}/AppData/Local/{{ item }}"
+    state: directory
+  loop:
+    - Microsoft/Windows Terminal
+    - Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState
+  when: ansible_system == "Win32NT"
+
+- name: Copy Windows Terminal configuration file for Windows
+  ansible.windows.win_template:
+    dest: "{{ ansible_env.HOME }}/AppData/Local/{{ item }}"
+    force: true
+    src: windows.j2
+  loop:
+    - Microsoft/Windows Terminal/settings.json
+    - Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json
+  when: ansible_system == "Win32NT"

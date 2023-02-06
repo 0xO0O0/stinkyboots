@@ -1,0 +1,67 @@
+---
+# Do not integrate PSGallery! Its trust workflow is exceedingly unrealiable on
+# Windows 11.
+- name: Get latest PowerShell Core version
+  ansible.windows.win_uri:
+    method: GET
+    return_content: true
+    url: https://formulae.brew.sh/api/cask/powershell.json
+  register: powershell_cask
+  when: ansible_system == "Win32NT"
+
+- name: Install PowerShell Core for Windows
+  ansible.windows.win_package:
+    arguments:
+      - /quiet
+      - ADD_EXPLORER_CONTEXT_MENU_OPENPOWERSHELL=1
+      - ENABLE_PSREMOTING=1
+      - REGISTER_MANIFEST=1
+    path: >-
+      https://github.com/PowerShell/PowerShell/releases/download/v{{
+      powershell_cask.json.version }}/PowerShell-{{ powershell_cask.json.version
+      }}-win-x64.msi
+  when: ansible_system == "Win32NT"
+
+- name: Create PowerShell settings directories for Windows
+  ansible.windows.win_file:
+    path: "{{ ansible_env.HOME }}/{{ item }}"
+    state: directory
+  loop:
+    - Documents/PowerShell
+    - Documents/PowerShell/Modules
+    - Documents/WindowsPowerShell
+    - Documents/WindowsPowerShell/Modules
+  when: ansible_system == "Win32NT"
+
+- name: Copy PowerShell settings files for Windows
+  ansible.windows.win_copy:
+    dest: "{{ ansible_env.HOME }}/{{ item }}"
+    force: true
+    src: profile.ps1
+  loop:
+    - Documents/PowerShell/Microsoft.PowerShell_profile.ps1
+    - Documents/WindowsPowerShell/Microsoft.PowerShell_profile.ps1
+  when: ansible_system == "Win32NT"
+
+- name: Install local PowerShell modules
+  vars:
+    psmodule_folders:
+      - Documents/PowerShell/Modules
+      - Documents/WindowsPowerShell/Modules
+    psmodules:
+      - SSHCompletion
+  when: ansible_system == "Win32NT"
+  block:
+    - name: Create PowerShell module directories for Windows
+      ansible.windows.win_file:
+        path: "{{ ansible_env.HOME }}/{{ item[0] }}/{{ item[1] }}"
+        state: directory
+      loop: "{{ psmodule_folders | product(psmodules) | list }}"
+
+    - name: Copy PowerShell modules for Windows
+      ansible.windows.win_copy:
+        dest: >-
+          {{ ansible_env.HOME }}/{{ item[0] }}/{{ item[1] }}/{{ item[1] }}.psm1
+        force: true
+        src: "{{ item[1] }}.psm1"
+      loop: "{{ psmodule_folders | product(psmodules) | list }}"

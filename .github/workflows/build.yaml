@@ -1,0 +1,167 @@
+# GitHub Actions workflow file.
+#
+# For more information, visit
+# https://docs.github.com/actions/learn-github-actions.
+
+---
+name: build
+
+# Trigger workflow on any push or pull request.
+on:
+  pull_request:
+    branches:
+      - "**"
+  push:
+    branches:
+      - "**"
+
+jobs:
+  lint:
+    name: Check code with formatter and linter
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v2
+      - name: Install Node interpreter
+        uses: actions/setup-node@v2
+        with:
+          node-version: 18
+      - name: Cache Node packages
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: >-
+            node-18_${{ runner.os }}_npm-${{ hashFiles('package-lock.json') }}
+      - name: Install Node packages
+        run: npm install
+      - name: Install Python interpreter
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.10"
+      - name: Cache Python packages
+        uses: actions/cache@v2
+        with:
+          path: .venv
+          key: >-
+            python-3.10_${{ runner.os }}_poetry-${{ hashFiles('poetry.lock') }}
+      - name: Install Python packages
+        run: |
+          python -m pip install --upgrade pip poetry setuptools wheel
+          poetry config virtualenvs.in-project true
+          poetry install -v
+      - name: Check format of configuration files
+        run: npm run prettier:test
+      - name: Install Shfmt
+        run: |
+          shfmt_version="$(curl -LSfs https://formulae.brew.sh/api/formula/shfmt.json | jq -r .versions.stable)"
+          sudo curl -LSfs "https://github.com/mvdan/sh/releases/download/v${shfmt_version}/shfmt_v${shfmt_version}_linux_amd64" -o "/usr/local/bin/shfmt"
+          sudo chmod 755 "/usr/local/bin/shfmt"
+      - name: Check format of shell scripts
+        run: npm run shfmt:test
+      - name: Install ShellCheck
+        run: sudo apt install -y shellcheck
+      - name: Run ShellCheck on shell scripts
+        run: npm run shellcheck:test
+      - name: Lint Ansible playbook and roles
+        run: |
+          poetry run ansible-lint --version
+          poetry run ansible-lint playbook.yaml
+
+  test-bash:
+    name: Run unit tests for Bash scripts
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v2
+      - name: Install YQ YAML parser
+        run: |
+          sudo curl -LSfs https://github.com/mikefarah/yq/releases/download/v4.30.6/yq_linux_amd64 -o /usr/local/bin/yq
+          sudo chmod 755 /usr/local/bin/yq
+      - name: Install Node interpreter
+        uses: actions/setup-node@v2
+        with:
+          node-version: 18
+      - name: Cache Node packages
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: >-
+            node-18_${{ runner.os }}_npm-${{ hashFiles('package-lock.json') }}
+      - name: Install Node packages
+        run: npm install
+      - name: Run Bash unit tests with Bats
+        run: npm run bats:test
+
+  test-documenation:
+    name: Build documentation
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v2
+      - name: Install Node interpreter
+        uses: actions/setup-node@v2
+        with:
+          node-version: 18
+      - name: Cache Node packages
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: >-
+            node-18_${{ runner.os }}_npm-${{ hashFiles('package-lock.json') }}
+      - name: Install Node packages
+        run: npm install
+      - name: Build documentation
+        # Vuepress incompatible with OpenSSL version 3, which is used on Ubuntu
+        # 22.04. Vuepress is in maintenance mode and users are recommended to
+        # migrate to its successor is Vitepress,
+        # https://github.com/vuejs/vitepress. Migration will occur after
+        # Vitepress makes a stable release.
+        env:
+          NODE_OPTIONS: --openssl-legacy-provider
+        run: npm run vuepress:build
+
+  test-package:
+    name: Test building a ${{ matrix.format }} package
+    strategy:
+      fail-fast: false
+      matrix:
+        format: [deb]
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Build Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./tests/integration/${{ matrix.format }}.Dockerfile
+          tags: bootware:${{ matrix.format }}
+          push: false
+
+  test-powershell:
+    name: Run linter and unit tests for PowerShell scripts
+    runs-on: windows-2022
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v2
+      - name: Install YQ YAML parser
+        run: choco install -y yq
+      - name: Install PSScriptAnalyzer
+        run: Install-Module -Force -Name PSScriptAnalyzer
+        shell: pwsh
+      - name: Run PSScriptAnalyzer format lints on all PowerShell scripts
+        run: >-
+          Invoke-ScriptAnalyzer -EnableExit -Recurse -Path . -Setting
+          CodeFormatting
+        shell: pwsh
+      - name: Run PSScriptAnalyzer code lints on all PowerShell scripts
+        run: Invoke-ScriptAnalyzer -EnableExit -Recurse -Path .
+        shell: pwsh
+      - name: Install Pester
+        run: Install-Module -Force -Name Pester
+        shell: pwsh
+      - name: Run PowerShell unit tests with Pester
+        run: Invoke-Pester -Output Detailed ./tests/unit/
+        shell: pwsh

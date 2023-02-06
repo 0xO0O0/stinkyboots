@@ -1,0 +1,181 @@
+{
+  "data.preview.theme": "light",
+  "deno.suggest.autoImports": false,
+  "editor.acceptSuggestionOnEnter": "off",
+  "editor.accessibilitySupport": "off",
+  "editor.autoClosingBrackets": "never",
+  "editor.autoClosingQuotes": "never",
+  "editor.bracketPairColorization.enabled": true,
+  "editor.detectIndentation": false,
+  "editor.fontFamily": "Fira Code",
+  "editor.fontLigatures": true,
+  "editor.fontSize": {{ font_size }},
+  "editor.guides.bracketPairs":"active",
+  "editor.inlayHints.enabled": "offUnlessPressed",
+  "editor.minimap.enabled": false,
+  "editor.parameterHints.enabled": true,
+  "editor.rulers": [80],
+  "editor.tabSize": 4,
+  "[css]": {
+    "editor.tabSize": 2
+  },
+  "[dockercompose]": {
+    "editor.tabSize": 2
+  },
+  "[fish]": {
+    "editor.tabSize": 2
+  },
+  "[helm]": {
+    "editor.tabSize": 2
+  },
+  "[html]": {
+    "editor.tabSize": 2
+  },
+  "[javascript]": {
+    "editor.tabSize": 2
+  },
+  "[json]": {
+    "editor.tabSize": 2
+  },
+  "[jsonc]": {
+    "editor.tabSize": 2
+  },
+  "[ruby]": {
+    "editor.tabSize": 2
+  },
+  "[rust]": {
+    "editor.rulers": [100]
+  },
+  "[scss]": {
+    "editor.tabSize": 2
+  },
+  "[shellscript]": {
+    "editor.tabSize": 2
+  },
+  "[terraform]": {
+    "editor.tabSize": 2
+  },
+  "[typescript]": {
+    "editor.tabSize": 2
+  },
+  "[typescriptreact]": {
+    "editor.tabSize": 2
+  },
+  "[vue]": {
+    "editor.tabSize": 2
+  },
+  "[xml]": {
+    "editor.tabSize": 2
+  },
+  "[yaml]": {
+    "editor.tabSize": 2
+  },
+  "emmet.excludeLanguages": [],
+  "emmet.includeLanguages": {
+    "markdown": "html"
+  },
+  "emmet.triggerExpansionOnTab": true,
+  "explorer.autoReveal": false,
+  "explorer.confirmDelete": false,
+  "explorer.confirmDragAndDrop": false,
+  "explorer.openEditors.visible": 0,
+  "extensions.ignoreRecommendations": true,
+  "files.associations": {
+    "*.bats": "shellscript",
+    "*.yaml.gotmpl": "yaml",
+    "rust-toolchain": "toml"
+  },
+  "files.defaultLanguage": "markdown",
+  "files.exclude": {
+    "**/.DS_Store": true,
+    "**/.git": true,
+    "**/.hg": true,
+    "**/.svn": true,
+    "**/*.olean": true,
+    "**/CVS": true
+  },
+  "files.insertFinalNewline": true,
+  "files.watcherExclude": {
+    "**/__pycache__/**": true,
+    "**/_target/**": true,
+    "**/.benchmarks/**": true,
+    "**/.dvc/**": true,
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/.hypothesis/**": true,
+    "**/.mypy_cache/**": true,
+    "**/.pytest_cache/**": true,
+    "**/.tox/**": true,
+    "**/.venv/**": true,
+    "**/build/**": true,
+    "**/node_modules/**": true,
+    "**/target/**": true,
+    "**/venv/**": true
+  },
+  "javascript.suggest.autoImports": false,
+  "javascript.updateImportsOnFileMove.enabled": "never",
+  "jupyter.askForKernelRestart": false,
+  "latex-workshop.bind.enter.key": false,
+  "latex-workshop.latex.autoBuild.run": "onFileChange",
+  "latex-workshop.view.pdf.viewer": "tab",
+  "liveServer.settings.donotShowInfoMsg": true,
+  "lldb.suppressUpdateNotifications": true,
+  "Lua.telemetry.enable": false,
+  "notebook.lineNumbers": "on",
+  "python.analysis.autoImportCompletions": false,
+  "python.formatting.provider": "black",
+  "python.languageServer": "Pylance",
+  "python.linting.flake8Args": ["--max-line-length=80"],
+  "python.linting.flake8Enabled": true,
+  "python.linting.mypyEnabled": true,
+  "python.linting.pylintEnabled": false,
+  "python.terminal.activateEnvironment": false,
+  "python.testing.promptToConfigure": false,
+  "python.testing.pytestEnabled": true,
+  "python.venvPath": "${workspaceFolder}/.venv",
+  "redhat.telemetry.enabled": false,
+{% if vscode_extensions | length > 0 %}
+  "remote.SSH.defaultExtensions": [
+{% for extension in vscode_extensions[:-1] %}
+    "{{ extension }}",
+{% endfor %}
+    "{{ vscode_extensions[-1] }}"
+  ],
+{% endif %}
+  "remote.SSH.useLocalServer": false,
+  "rust-analyzer.notifications.cargoTomlNotFound": false,
+  "security.workspace.trust.enabled": false,
+  "telemetry.telemetryLevel": "off",
+  "terminal.integrated.cursorStyle": "line",
+  "terminal.integrated.fontFamily": "Fira Code",
+  "terminal.integrated.fontSize": {{ font_size }},
+  "terminal.integrated.inheritEnv": true,
+  "terminal.integrated.profiles.windows": {
+    "PowerShell": {
+      "source": "PowerShell",
+      "args": ["-NoLogo"]
+    }
+  },
+  "terminal.integrated.showExitAlert": false,
+  "terminal.integrated.enableMultiLinePasteWarning": false,
+  "typescript.suggest.autoImports": false,
+  "typescript.updateImportsOnFileMove.enabled": "never"
+  "update.mode": "none",
+  "vite.autoStart": false,
+  "volar.doctor.statusBarItem": false,
+  "volar.updateImportsOnFileMove.enabled": false,
+  "vs-kubernetes": {
+    "vs-kubernetes.crd-code-completion": "enabled"
+  },
+  "vsicons.dontShowNewVersionMessage": true,
+  "workbench.colorTheme": "Solarized Light",
+  "workbench.editorAssociations": {
+    "*.ipynb": "jupyter-notebook"
+  },
+  "workbench.iconTheme": "vscode-icons",
+  "workbench.startupEditor": "welcomePage",
+  "workbench.statusBar.visible": true,
+  "yaml.schemas": {
+    "https://json.schemastore.org/github-workflow.json": ".github/workflows/build.yaml"
+  }
+}

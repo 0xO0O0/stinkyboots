@@ -1,0 +1,9 @@
+---
+- name: Install GNOME terminals
+  ansible.builtin.import_tasks: gnome.yaml
+
+- name: Install MacOS terminals
+  ansible.builtin.import_tasks: macos.yaml
+
+- name: Install Windows terminals
+  ansible.builtin.import_tasks: windows.yaml

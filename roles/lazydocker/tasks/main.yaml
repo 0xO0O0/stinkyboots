@@ -1,0 +1,44 @@
+---
+- name: Get latest Lazydocker version
+  ansible.builtin.uri:
+    method: GET
+    return_content: true
+    url: https://formulae.brew.sh/api/formula/lazydocker.json
+  register: lazydocker_formula
+  when: ansible_system == "Linux"
+
+- name: Download Lazydocker for Linux
+  ansible.builtin.unarchive:
+    dest: /tmp/
+    mode: "777"
+    remote_src: true
+    src: >-
+      https://github.com/jesseduffield/lazydocker/releases/download/v{{
+      lazydocker_formula.json.versions.stable }}/lazydocker_{{
+      lazydocker_formula.json.versions.stable }}_Linux_{{
+      lazydocker_arch[system_architecture] }}.tar.gz
+  become: true
+  vars:
+    lazydocker_arch:
+      amd64: x86_64
+      arm64: arm64
+  when: ansible_system == "Linux"
+
+- name: Install Lazydocker for Linux
+  ansible.builtin.copy:
+    dest: /usr/local/bin/lazydocker
+    mode: "755"
+    remote_src: true
+    src: /tmp/lazydocker
+  become: true
+  when: ansible_system == "Linux"
+
+- name: Install Lazydocker for MacOS
+  community.general.homebrew:
+    name: lazydocker
+  when: ansible_system == "Darwin"
+
+- name: Install Lazydocker for Windows
+  community.windows.win_scoop:
+    name: lazydocker
+  when: ansible_system == "Win32NT"

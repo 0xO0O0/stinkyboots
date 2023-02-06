@@ -1,0 +1,117 @@
+---
+# Pyenv dependencies are listed at
+# https://github.com/pyenv/pyenv/wiki#suggested-build-environment.
+- name: Install Pyenv dependencies for Arch
+  become: true
+  community.general.pacman:
+    name:
+      - base-devel
+      - zlib
+  when: ansible_pkg_mgr == "pacman"
+
+- name: Install Pyenv dependencies for Debian
+  ansible.builtin.apt:
+    name:
+      - build-essential
+      - curl
+      - git
+      - libbluetooth-dev
+      - libbz2-dev
+      - libffi-dev
+      - liblzma-dev
+      - libncurses5-dev
+      - libncursesw5-dev
+      - libreadline-dev
+      - libsqlite3-dev
+      - libssl-dev
+      - llvm
+      - python3-openssl
+      - tk-dev
+      - uuid-dev
+      - wget
+      - xz-utils
+      - zlib1g-dev
+  become: true
+  when: ansible_pkg_mgr == "apt"
+
+- name: Install Pyenv dependencies for Fedora
+  ansible.builtin.dnf:
+    name:
+      - bzip2-devel
+      - findutils
+      - libffi-devel
+      - openssl-devel
+      - readline-devel
+      - sqlite
+      - sqlite-devel
+      - xz
+      - xz-devel
+      - zlib-devel
+  become: true
+  when: ansible_pkg_mgr == "dnf"
+
+- name: Install Pyenv dependencies for MacOS
+  community.general.homebrew:
+    name:
+      - openssl
+      - readline
+      - sqlite3
+      - xz
+      - zlib
+  when: ansible_system == "Darwin"
+
+# Do not use Homebrew for installing Pyenv. The subsequent commands will not be
+# able to find the Pyenv executable.
+- name: Install Pyenv for Unix
+  # prettier-ignore
+  ansible.builtin.shell:  # noqa command-instead-of-module
+    cmd: curl -Sfs https://pyenv.run | bash
+    creates: "{{ ansible_env.HOME }}/.pyenv/bin/pyenv"
+  when: ansible_system != "Win32NT" and ansible_pkg_mgr != "apk"
+
+- name: Update Pyenv for Unix
+  ansible.builtin.shell:
+    cmd: |
+      source {{ ansible_env.HOME }}/.bashrc
+      pyenv update
+    executable: "{{ bash_executable }}"
+  when: ansible_system != "Win32NT" and ansible_pkg_mgr != "apk"
+
+- name: Get latest patch release for each Python minor version for Unix
+  ansible.builtin.shell:
+    cmd: |
+      source {{ ansible_env.HOME }}/.bashrc
+      pyenv install --list | grep -E "^\\s*{{ item }}.[0-9]+\\s*$" | tail -1 | xargs
+    executable: "{{ bash_executable }}"
+  loop: "{{ python_versions }}"
+  register: pyenv_releases
+  when: ansible_system != "Win32NT" and ansible_pkg_mgr != "apk"
+
+- name: Extract Python versions from Pyenv outputs for Unix
+  ansible.builtin.set_fact:
+    python_releases:
+      "{{ pyenv_releases.results | map(attribute='stdout') | list }}"
+  when: ansible_system != "Win32NT" and ansible_pkg_mgr != "apk"
+
+- name: Install multiple Python versions for Unix
+  ansible.builtin.shell:
+    cmd: |
+      source {{ ansible_env.HOME }}/.bashrc
+      pyenv install -s {{ item }}
+    executable: "{{ bash_executable }}"
+  loop: "{{ python_releases }}"
+  when: ansible_system != "Win32NT" and ansible_pkg_mgr != "apk"
+
+- name: Install multiple Python versions for Windows
+  community.windows.win_scoop:
+    name: python{{ item | replace('.', '') | replace('310', '') }}
+  loop: "{{ python_versions }}"
+  when: ansible_system == "Win32NT"
+
+- name: Set Python global versions for Unix
+  ansible.builtin.shell:
+    cmd: |
+      source {{ ansible_env.HOME }}/.bashrc
+      pyenv global system {{ python_releases | reverse | join(' ') }}
+    executable: "{{ bash_executable }}"
+  when: ansible_system != "Win32NT" and ansible_pkg_mgr != "apk"

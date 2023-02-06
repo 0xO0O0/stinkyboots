@@ -1,0 +1,12 @@
+---
+- name: Configure system dependencies for Python
+  ansible.builtin.import_tasks: system.yaml
+
+- name: Install multiple Python versions
+  ansible.builtin.import_tasks: versions.yaml
+
+- name: Install Pipx and Python applications
+  ansible.builtin.import_tasks: pipx.yaml
+
+- name: Configure user settings for Jupyter
+  ansible.builtin.import_tasks: jupyter.yaml

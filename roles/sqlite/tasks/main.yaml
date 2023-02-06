@@ -1,0 +1,33 @@
+---
+- name: Install SQLite for FreeBSD
+  become: true
+  community.general.pkgng:
+    name: sqlite3
+  when: ansible_system == "FreeBSD"
+
+- name: Install SQLite for Linux
+  ansible.builtin.package:
+    name: "{{ sqlite_package.get(ansible_pkg_mgr, 'sqlite') }}"
+  become: true
+  vars:
+    sqlite_package:
+      apt: sqlite3
+  when: ansible_system == "Linux"
+
+- name: Install SQLite for MacOS
+  community.general.homebrew:
+    name: sqlite
+  when: ansible_system == "Darwin"
+
+- name: Install SQLite for Windows
+  community.windows.win_scoop:
+    name: sqlite
+  when: ansible_system == "Win32NT"
+
+- name: Copy SQLite settings file
+  ansible.builtin.copy:
+    dest: "{{ ansible_env.HOME }}/.sqliterc"
+    force: true
+    mode: "644"
+    owner: "{{ ansible_user_id }}"
+    src: .sqliterc

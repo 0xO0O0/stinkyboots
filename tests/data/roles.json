@@ -1,0 +1,385 @@
+[
+  {
+    "name": "age",
+    "tests": ["age --version", "age-keygen --version"]
+  },
+  {
+    "name": "alacritty",
+    "skip": [{ "arch": "arm64", "os": "linux" }, { "os": "debian" }],
+    "tests": ["alacritty --version"]
+  },
+  {
+    "name": "appimage",
+    "skip": [
+      { "os": "freebsd" },
+      { "os": "linux" },
+      { "os": "macos" },
+      { "os": "windows" }
+    ],
+    "tests": ["ail-cli --version"]
+  },
+  { "name": "audio" },
+  {
+    "name": "avro",
+    "skip": [{ "os": "freebsd" }],
+    "tests": ["avro-tools cat"]
+  },
+  { "name": "aws", "tests": ["aws --version"] },
+  {
+    "name": "bash",
+    "skip": [{ "os": "windows" }],
+    "tests": ["bash --version"]
+  },
+  {
+    "name": "bashdb",
+    "skip": [{ "os": "linux" }, { "os": "windows" }],
+    "tests": ["bashdb --version"]
+  },
+  { "name": "bat", "tests": ["bat --version"] },
+  {
+    "name": "bats",
+    "skip": [{ "os": "windows" }],
+    "tests": ["bats --version"]
+  },
+  { "name": "beekeeper" },
+  { "name": "build" },
+  { "name": "caffeine" },
+  {
+    "name": "chrome",
+    "skip": [
+      { "arch": "arm64", "os": "debian" },
+      { "arch": "arm64", "os": "fedora" },
+      { "arch": "arm64", "os": "suse" },
+      { "arch": "arm64", "os": "ubuntu" },
+      { "os": "alpine" },
+      { "os": "arch" },
+      { "os": "freebsd" }
+    ],
+    "tests": {
+      "default": ["google-chrome --version"],
+      "macos": [
+        "/Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome --version"
+      ],
+      "windows": ["scoop which chrome"]
+    }
+  },
+  { "name": "compass" },
+  { "name": "croc", "tests": ["croc --version"] },
+  {
+    "name": "datree",
+    "skip": [{ "os": "freebsd" }],
+    "tests": ["datree version"]
+  },
+  { "name": "dbeaver" },
+  { "name": "defterm" },
+  {
+    "name": "deno",
+    "skip": [{ "arch": "arm64", "os": "linux" }, { "os": "alpine" }],
+    "tests": ["deno --version"]
+  },
+  { "name": "deskenv" },
+  {
+    "name": "direnv",
+    "skip": [{ "os": "windows" }],
+    "tests": ["direnv --version"]
+  },
+  {
+    "name": "dust",
+    "skip": [{ "arch": "arm64", "os": "linux" }, { "os": "freebsd" }],
+    "tests": ["dust --version"]
+  },
+  { "name": "doctl", "tests": ["doctl version"] },
+  { "name": "docker", "tests": ["docker --version"] },
+  { "name": "docker_compose", "tests": ["docker compose --help"] },
+  { "name": "duf", "tests": ["duf --version"] },
+  {
+    "name": "dvc",
+    "skip": [
+      { "arch": "arm64", "os": "linux" },
+      { "os": "alpine" },
+      { "os": "arch" }
+    ],
+    "tests": ["dvc --version"]
+  },
+  {
+    "name": "etcher",
+    "skip": [{ "arch": "arm64", "os": "linux" }, { "os": "freebsd" }]
+  },
+  {
+    "name": "exa",
+    "skip": [{ "arch": "arm64", "os": "linux" }, { "os": "windows" }],
+    "tests": ["exa --version"]
+  },
+  {
+    "name": "fd",
+    "skip": [{ "arch": "arm64", "os": "linux" }],
+    "tests": ["fd --version"]
+  },
+  {
+    "name": "ffsend",
+    "skip": [{ "arch": "arm64", "os": "linux" }, { "os": "alpine" }],
+    "tests": ["ffsend --version"]
+  },
+  {
+    "name": "firefox",
+    "tests": {
+      "default": ["firefox --version"],
+      "macos": ["/Applications/Firefox.app/Contents/MacOS/firefox --version"],
+      "ubuntu": []
+    }
+  },
+  {
+    "name": "fish",
+    "skip": [{ "os": "windows" }],
+    "tests": ["fish --version"]
+  },
+  {
+    "name": "flatpak",
+    "skip": [{ "os": "freebsd" }, { "os": "macos" }, { "os": "windows" }],
+    "tests": ["flatpak --version"]
+  },
+  { "name": "font" },
+  { "name": "fzf", "tests": ["fzf --version"] },
+  {
+    "name": "gcp",
+    "skip": [{ "arch": "arm64", "os": "fedora" }, { "os": "suse" }],
+    "tests": ["gcloud --version", "gsutil --version"]
+  },
+  { "name": "gdu", "skip": [{ "os": "alpine" }], "tests": ["gdu --version"] },
+  {
+    "name": "git",
+    "tests": ["delta --version", "git --version", "git-lfs --version"]
+  },
+  {
+    "name": "github",
+    "skip": [{ "os": "arch" }, { "os": "freebsd" }],
+    "tests": ["gh --version"]
+  },
+  {
+    "name": "gitlab",
+    "tests": ["gitlab-runner --version"]
+  },
+  { "name": "gitui", "tests": ["gitui --version"] },
+  { "name": "glow", "skip": [{ "os": "alpine" }], "tests": ["glow --version"] },
+  { "name": "go", "tests": ["go version"] },
+  {
+    "name": "hdf5",
+    "skip": [{ "os": "alpine" }, { "os": "windows" }],
+    "tests": ["h5dump --version", "h5ls --version"]
+  },
+  {
+    "name": "hadolint",
+    "skip": [{ "os": "freebsd" }],
+    "tests": ["hadolint --version"]
+  },
+  {
+    "name": "helix",
+    "skip": [{ "arch": "arm64", "os": "linux" }, { "os": "alpine" }],
+    "tests": ["hx --version"]
+  },
+  { "name": "helm", "tests": ["helm version --short"] },
+  { "name": "helmfile", "tests": ["helmfile --version"] },
+  {
+    "name": "htmlq",
+    "skip": [{ "arch": "arm64", "os": "linux" }, { "os": "alpine" }],
+    "tests": ["htmlq --version"]
+  },
+  {
+    "name": "hyper",
+    "skip": [{ "os": "alpine" }, { "os": "arch" }, { "os": "freebsd" }],
+    "tests": ["hyper --version"]
+  },
+  {
+    "name": "hyperfine",
+    "skip": [
+      { "arch": "arm64", "os": "debian" },
+      { "arch": "arm64", "os": "ubuntu" }
+    ],
+    "tests": ["hyperfine --version"]
+  },
+  { "name": "java", "tests": ["java -version", "mvn --version"] },
+  { "name": "jq", "tests": ["jq --version"] },
+  { "name": "k3d", "skip": [{ "os": "freebsd" }], "tests": ["k3d --version"] },
+  { "name": "k9s", "tests": ["k9s version"] },
+  {
+    "name": "kind",
+    "skip": [{ "os": "freebsd" }],
+    "tests": ["kind --version"]
+  },
+  {
+    "name": "krew",
+    "skip": [{ "os": "freebsd" }],
+    "tests": ["kubectl-krew version"]
+  },
+  { "name": "kubectl", "tests": ["kubectl version --client --short"] },
+  {
+    "name": "kubeshark",
+    "skip": [{ "os": "freebsd" }],
+    "tests": ["kubeshark version"]
+  },
+  {
+    "name": "lazydocker",
+    "skip": [{ "os": "freebsd" }],
+    "tests": ["lazydocker --version"]
+  },
+  {
+    "name": "libvirt",
+    "skip": [{ "os": "windows" }],
+    "tests": ["virsh --version"]
+  },
+  {
+    "name": "lua",
+    "skip": [{ "os": "alpine" }],
+    "tests": {
+      "default": ["lua -v"],
+      "freebsd": ["lua54 -v"]
+    }
+  },
+  {
+    "name": "mdbook",
+    "skip": [{ "arch": "arm64" }, { "os": "alpine" }],
+    "tests": ["mdbook --version"]
+  },
+  {
+    "name": "mkcert",
+    "skip": [{ "os": "freebsd" }],
+    "tests": ["mkcert --version"]
+  },
+  {
+    "name": "mongo",
+    "skip": [{ "os": "alpine" }, { "os": "freebsd" }],
+    "tests": ["mongosh --version"]
+  },
+  {
+    "name": "navi",
+    "skip": [{ "arch": "arm64", "os": "linux" }, { "os": "freebsd" }],
+    "tests": ["navi --version"]
+  },
+  { "name": "neovim", "tests": ["nvim --version"] },
+  { "name": "node", "tests": ["node --version", "npm --version"] },
+  { "name": "obsidian" },
+  { "name": "package" },
+  { "name": "packer", "tests": ["packer --version"] },
+  { "name": "parquet" },
+  { "name": "postgres" },
+  {
+    "name": "powershell",
+    "skip": [{ "os": "freebsd" }, { "os": "linux" }, { "os": "macos" }],
+    "tests": ["pwsh --version"]
+  },
+  {
+    "name": "procs",
+    "skip": [
+      { "arch": "arm64", "os": "debian" },
+      { "arch": "arm64", "os": "ubuntu" },
+      { "os": "alpine" },
+      { "os": "freebsd" },
+      { "os": "suse" }
+    ],
+    "tests": ["procs --version"]
+  },
+  {
+    "name": "python",
+    "tests": ["pipx --version", "python --version"]
+  },
+  {
+    "name": "qemu",
+    "skip": [{ "os": "suse" }, { "os": "windows" }],
+    "tests": ["qemu-img --version"]
+  },
+  { "name": "rclone", "tests": ["rclone --version"] },
+  { "name": "restic", "tests": ["restic version"] },
+  { "name": "ripgrep", "tests": ["rg --version"] },
+  { "name": "rust", "tests": ["rustc --version", "cargo --version"] },
+  {
+    "name": "scc",
+    "skip": [{ "os": "freebsd" }],
+    "tests": ["scc --version"]
+  },
+  {
+    "name": "sd",
+    "skip": [{ "arch": "arm64", "os": "linux" }],
+    "tests": ["sd --version"]
+  },
+  {
+    "name": "shellcheck",
+    "skip": [
+      { "arch": "arm64", "os": "alpine" },
+      { "os": "freebsd" },
+      { "os": "windows" }
+    ],
+    "tests": ["shellcheck --version"]
+  },
+  {
+    "name": "shfmt",
+    "skip": [{ "os": "windows" }],
+    "tests": ["shfmt --version"]
+  },
+  { "name": "sops", "tests": ["sops --version"] },
+  { "name": "sqlite", "tests": ["sqlite3 --version"] },
+  {
+    "name": "starship",
+    "skip": [{ "os": "freebsd" }],
+    "tests": ["starship --version"]
+  },
+  {
+    "name": "sudo",
+    "skip": [{ "os": "windows" }],
+    "tests": ["sudo --version"]
+  },
+  { "name": "system" },
+  {
+    "name": "termshark",
+    "tests": ["termshark --version", "tshark --version"]
+  },
+  { "name": "terraform", "tests": ["terraform --version"] },
+  { "name": "terragrunt", "tests": ["terragrunt --version"] },
+  {
+    "name": "tilt",
+    "skip": [{ "os": "alpine" }, { "os": "freebsd" }],
+    "tests": ["tilt version"]
+  },
+  { "name": "tldr", "skip": [{ "os": "suse" }], "tests": ["tldr --version"] },
+  { "name": "tmux", "skip": [{ "os": "windows" }], "tests": ["tmux -V"] },
+  {
+    "name": "usql",
+    "skip": [{ "arch": "arm64", "os": "linux" }, { "os": "alpine" }],
+    "tests": ["usql --version"]
+  },
+  {
+    "name": "vagrant",
+    "skip": [{ "os": "linux" }],
+    "tests": ["vagrant version"]
+  },
+  { "name": "vault", "tests": ["vault --version"] },
+  {
+    "name": "vscode",
+    "skip": [{ "os": "alpine" }, { "os": "freebsd" }, { "os": "windows" }],
+    "tests": ["code --version"]
+  },
+  { "name": "wasm" },
+  { "name": "winman" },
+  {
+    "name": "wireshark",
+    "skip": [{ "os": "macos" }],
+    "tests": ["wireshark --version"]
+  },
+  {
+    "name": "xh",
+    "tests": {
+      "default": ["xh --version", "xhs --version"],
+      "freebsd": ["xh --version"]
+    }
+  },
+  {
+    "name": "xsv",
+    "skip": [{ "arch": "arm64", "os": "linux" }],
+    "tests": ["xsv --version"]
+  },
+  { "name": "yq", "tests": ["yq --version"] },
+  {
+    "name": "zellij",
+    "skip": [{ "os": "freebsd" }, { "os": "windows" }],
+    "tests": ["zellij --version"]
+  }
+]

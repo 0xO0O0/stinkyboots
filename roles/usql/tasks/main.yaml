@@ -1,0 +1,59 @@
+---
+- name: Get latest Usql version
+  ansible.builtin.uri:
+    method: GET
+    return_content: true
+    url: https://api.github.com/repos/xo/usql/releases/latest
+  register: usql_release
+  when: ansible_system == "Linux" and system_architecture == "amd64"
+
+- name: Install Usql for FreeBSD
+  become: true
+  community.general.pkgng:
+    name: usql
+  when: ansible_system == "FreeBSD"
+
+# Use only static binaries of Usql. Dynamic binaries often depend on libicu
+# versions that are not supported on Linux distributions.
+- name: Download Usql for Linux
+  ansible.builtin.unarchive:
+    dest: /tmp/
+    mode: "755"
+    remote_src: true
+    src: >-
+      https://github.com/xo/usql/releases/download/{{ usql_release.json.tag_name
+      }}/usql_static-{{ usql_release.json.tag_name[1:] }}-linux-amd64.tar.bz2
+  become: true
+  when: ansible_system == "Linux" and system_architecture == "amd64"
+
+- name: Install Usql for Linux
+  ansible.builtin.copy:
+    dest: /usr/local/bin/usql
+    mode: "755"
+    remote_src: true
+    src: /tmp/usql_static
+  become: true
+  when: ansible_system == "Linux" and system_architecture == "amd64"
+
+- name: Tap Usql for MacOS
+  community.general.homebrew_tap:
+    name: xo/xo
+  when: ansible_system == "Darwin"
+
+- name: Install Usql for MacOS
+  community.general.homebrew:
+    name: xo/xo/usql
+  when: ansible_system == "Darwin"
+
+- name: Install Usql for Windows
+  community.windows.win_scoop:
+    name: usql
+  when: ansible_system == "Win32NT"
+
+- name: Copy Usql settings file
+  ansible.builtin.copy:
+    dest: "{{ ansible_env.HOME }}/.usqlrc"
+    force: true
+    mode: "644"
+    owner: "{{ ansible_user_id }}"
+    src: .usqlrc

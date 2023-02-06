@@ -1,0 +1,88 @@
+# GitHub Actions workflow file.
+#
+# For more information, visit
+# https://docs.github.com/actions/learn-github-actions.
+
+---
+name: release
+
+# Trigger workflow on SemVer compatible tags.
+on:
+  push:
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+"
+
+jobs:
+  release:
+    name: Get Git tag and make GitHub release
+    runs-on: ubuntu-22.04
+    outputs:
+      tag: ${{ steps.extract_tag.outputs.tag }}
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Extract Git tag
+        id: extract_tag
+        shell: bash
+        run: echo "##[set-output name=tag;]$(echo ${GITHUB_REF#refs/tags/})"
+      - name: Create GitHub release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Bootware ${{ steps.extract_tag.outputs.tag }}
+          body: >-
+            See the [changelog](https://github.com/scruffaluff/bootware/blob/${{
+            steps.extract_tag.outputs.tag }}/CHANGELOG.md) for more information.
+
+  collection:
+    name: Publish collection to Ansible Galaxy
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v2
+      - name: Build and Deploy Collection
+        uses: artis3n/ansible_galaxy_collection@v2
+        with:
+          api_key: ${{ secrets.ANSIBLE_GALAXY_API_KEY }}
+
+  package:
+    name: Create and upload ${{ matrix.package }} package
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [deb]
+    needs: release
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v2
+      - name: Install Node interpreter
+        uses: actions/setup-node@v2
+        with:
+          node-version: 18
+      - name: Cache Node packages
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: >-
+            node-18_${{ runner.os }}_npm-${{ hashFiles('package-lock.json') }}
+      - name: Install Node packages
+        run: npm install
+      - name: Build package
+        id: build_package
+        run: |
+          package_path=$(node scripts/build_package.js ${{ matrix.package }} ${{ needs.release.outputs.tag }})
+          package_name=$(basename $package_path)
+          echo "::set-output name=package_name::$package_name"
+          echo "::set-output name=package_path::$package_path"
+      - name: Upload release archive
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: ${{ steps.build_package.outputs.package_path }}
+          asset_name: ${{ steps.build_package.outputs.package_name }}
+          asset_content_type: application/octet-stream

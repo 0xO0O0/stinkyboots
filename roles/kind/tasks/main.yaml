@@ -1,0 +1,43 @@
+---
+- name: Get latest Kind version
+  ansible.builtin.uri:
+    method: GET
+    return_content: true
+    url: https://formulae.brew.sh/api/formula/kind.json
+  register: kind_formula
+  when: ansible_system == "Linux"
+
+- name: Install Kind for Linux
+  ansible.builtin.get_url:
+    dest: /usr/local/bin/kind
+    mode: "755"
+    owner: root
+    url: >-
+      https://github.com/kubernetes-sigs/kind/releases/download/v{{
+      kind_formula.json.versions.stable }}/kind-linux-{{ system_architecture }}
+  become: true
+  when: ansible_system == "Linux"
+
+- name: Install Kind for MacOS
+  community.general.homebrew:
+    name: kind
+  when: ansible_system == "Darwin"
+
+- name: Install Kind for Windows
+  community.windows.win_scoop:
+    name: kind
+  when: ansible_system == "Win32NT"
+
+- name: Create Fish completions directory for Unix
+  ansible.builtin.file:
+    mode: "755"
+    owner: "{{ ansible_user_id }}"
+    path: "{{ ansible_env.HOME }}/.config/fish/completions"
+    state: directory
+  when: ansible_system != "Win32NT"
+
+- name: Generate Kind Fish completions for Unix
+  ansible.builtin.shell: >-
+    kind completion fish > {{ ansible_env.HOME
+    }}/.config/fish/completions/kind.fish
+  when: ansible_system in ["Darwin", "Linux"]

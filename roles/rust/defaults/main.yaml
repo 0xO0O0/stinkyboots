@@ -1,0 +1,50 @@
+---
+_cargo_applications:
+  always:
+    - cargo-bloat
+    - cargo-cache
+    - cross
+  Darwin:
+    amd64: []
+    always:
+      - cargo-audit
+    arm64: []
+  FreeBSD:
+    amd64: []
+    always:
+      - cargo-audit
+      - cargo-binutils
+    arm64: []
+  Linux:
+    amd64:
+      - cargo-audit
+      - cargo-edit
+      - cargo-expand
+      # TODO: Cargo generate depends on an outdated version of OpenSSL, i.e.
+      # 1.1. On some newer Linux distributions, OpenSSL 1.1 is no longer
+      # supported. Cargo generate should be added back once it works with
+      # OpenSSL 3.
+      # - cargo-generate
+      - cargo-make
+      - cargo-tarpaulin
+    always:
+      # TODO: Figure out why cargo-arch is disabled.
+      # - cargo-arch
+      - cargo-binutils
+      - cargo-deb
+      - cargo-rpm
+    arm64: []
+  Win32NT:
+    amd64: []
+    always:
+      - cargo-audit
+    arm64: []
+cargo_applications: >-
+  {{ _cargo_applications.always + _cargo_applications[ansible_system].always +
+  _cargo_applications[ansible_system].get(system_architecture, []) }}
+rustup_components:
+  - clippy
+  - llvm-tools-preview
+  - rust-src
+  - rustfmt
+rustup_targets: []

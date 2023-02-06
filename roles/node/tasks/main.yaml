@@ -1,0 +1,132 @@
+---
+- name: Get latest NVM version
+  ansible.builtin.uri:
+    method: GET
+    return_content: true
+    url: https://formulae.brew.sh/api/formula/nvm.json
+  register: nvm_formula
+  when: ansible_system not in ["FreeBSD", "Win32NT"]
+
+# NVM is not well-supported for Alpine. For more information, visit
+# https://github.com/nvm-sh/nvm/blob/master/README.md#installing-nvm-on-alpine-linux.
+- name: Install Node for Alpine
+  become: true
+  community.general.apk:
+    name:
+      - nodejs
+      - npm
+  when: ansible_pkg_mgr == "apk"
+
+# NVM does not provide binaries for FreeBSD and Node versions 16 and 17 have
+# OpenSSL errors on FreeBSD 13.
+- name: Install Node for FreeBSD
+  become: true
+  community.general.pkgng:
+    name:
+      - node14
+      - npm-node14
+  when: ansible_system == "FreeBSD"
+
+- name: Download Node version manager installer for Unix
+  ansible.builtin.get_url:
+    dest: /tmp/nvm_install.sh
+    mode: "755"
+    url: >-
+      https://raw.githubusercontent.com/nvm-sh/nvm/v{{
+      nvm_formula.json.versions.stable }}/install.sh
+  when: >-
+    ansible_system not in ["FreeBSD", "Win32NT"] and ansible_pkg_mgr != "apk"
+
+- name: Install Node version manager for Unix
+  ansible.builtin.command: /tmp/nvm_install.sh
+  when: >-
+    ansible_system not in ["FreeBSD", "Win32NT"] and ansible_pkg_mgr != "apk"
+
+- name: Install multiple Node versions for Unix
+  ansible.builtin.shell:
+    cmd: |
+      source {{ ansible_env.HOME }}/.bashrc
+      nvm install {{ item }}
+    executable: "{{ bash_executable }}"
+  loop: "{{ node_versions }}"
+  when: >-
+    ansible_system not in ["FreeBSD", "Win32NT"] and ansible_pkg_mgr != "apk"
+
+# NVM is not used for Windows due to its frustrating launch checks that require
+# administrator permissions.
+- name: Install multiple Node versions for Windows
+  community.windows.win_scoop:
+    name: nodejs{{ item | replace('18', '') }}
+  loop: "{{ node_versions }}"
+  when: ansible_system == "Win32NT"
+
+- name: Configure NPM for Alpine and FreeBSD
+  ansible.builtin.shell:
+    cmd: |
+      source {{ ansible_env.HOME }}/.bashrc
+      mkdir -p {{ ansible_env.HOME }}/.npm-global
+      npm config set prefix {{ ansible_env.HOME }}/.npm-global
+    executable: "{{ bash_executable }}"
+  when: >-
+    (ansible_pkg_mgr == "apk" or ansible_system == "FreeBSD") and
+    ansible_user_id != "root"
+
+- name: Set default Node version for Unix
+  ansible.builtin.shell:
+    cmd: |
+      source {{ ansible_env.HOME }}/.bashrc
+      nvm alias default {{ node_versions[-1] }}
+    executable: "{{ bash_executable }}"
+  when: >-
+    ansible_system not in ["FreeBSD", "Win32NT"] and ansible_pkg_mgr != "apk"
+
+# NVM cannot find compatible versions of NPM for Alpine.
+- name: Update NPM for Unix
+  ansible.builtin.shell:
+    cmd: |
+      source {{ ansible_env.HOME }}/.bashrc
+      nvm install-latest-npm
+    executable: "{{ bash_executable }}"
+  when: >-
+    ansible_system not in ["FreeBSD", "Win32NT"] and ansible_user_id != "root"
+    and ansible_pkg_mgr != "apk"
+
+- name: >-
+    Install or update Node CLI applications for Alpine and FreeBSD
+  ansible.builtin.shell:
+    cmd: |
+      source {{ ansible_env.HOME }}/.bashrc
+      npm install -g {{ item }}
+    executable: "{{ bash_executable }}"
+  loop: "{{ node_applications }}"
+  when: >-
+    (ansible_pkg_mgr == "apk" or ansible_system == "FreeBSD") and
+    ansible_user_id != "root"
+
+- name: Install or update Node CLI applications for Unix
+  ansible.builtin.shell:
+    cmd: |
+      source {{ ansible_env.HOME }}/.bashrc
+      nvm use {{ node_versions[-1] }}
+      npm install -g {{ item }}
+    executable: "{{ bash_executable }}"
+  loop: "{{ node_applications }}"
+  when: >-
+    ansible_system not in ["FreeBSD", "Win32NT"] and ansible_user_id != "root"
+    and ansible_pkg_mgr != "apk"
+
+- name: Install or update Node CLI applications for Windows
+  ansible.windows.win_shell: |
+    (npm install -g {{ item }}) -Or (npm update -g {{ item }})
+  environment:
+    Path: "{{ scoop_apps }}\\nodejs\\current;{{ ansible_env.Path }}"
+  loop: "{{ node_applications }}"
+  when: ansible_system == "Win32NT"
+
+- name: Download Fast NVM Fish for Unix
+  ansible.builtin.get_url:
+    dest: "{{ ansible_env.HOME }}/.config/fish/functions/nvm.fish"
+    mode: "644"
+    url: https://raw.githubusercontent.com/brigand/fast-nvm-fish/master/nvm.fish
+  when: >-
+    ansible_system not in ["FreeBSD", "Win32NT"] and ansible_pkg_mgr != "apk"
