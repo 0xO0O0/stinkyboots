@@ -32,7 +32,6 @@ OPTIONS:
 EOF
 }
 
-token=${GITTOKEN} 
 #######################################
 # Assert that command can be found in system path.
 # Will exit script with an error code if command is not in system path.
@@ -124,7 +123,7 @@ error_usage() {
 #######################################
 install_completions() {
   local fish_url
-  fish_url="https://raw.githubusercontent.com/0xO0O0/stinkyboots/$3/completions/bootware.fish?token=${GITTOKEN}"
+  fish_url="https://raw.githubusercontent.com/0xO0O0/stinkyboots/$3/completions/bootware.fish"
 
   # Flags:
   #   -z: Check if the string has zero length or is null.
@@ -147,7 +146,7 @@ install_completions() {
 #######################################
 install_man() {
   local man_url
-  man_url="https://raw.githubusercontent.com/0xO0O0/stinkyboots/$2/bootware.1?token=${GITTOKEN}"
+  man_url="https://raw.githubusercontent.com/0xO0O0/stinkyboots/$2/bootware.1"
 
   ${1:+sudo} mkdir -p '/usr/local/share/man/man1'
   ${1:+sudo} curl -LSfs "${man_url}" -o '/usr/local/share/man/man1/bootware.1'
@@ -214,7 +213,7 @@ main() {
 
   assert_cmd curl
 
-  src_url="https://raw.githubusercontent.com/0xO0O0/stinkyboots/${version}/bootware.sh?token=${GITTOKEN}"
+  src_url="https://raw.githubusercontent.com/0xO0O0/stinkyboots/${version}/bootware.sh"
 
   # Use sudo for system installation if user did not give the --user, does not
   # own the file, and is not root.
