@@ -1,0 +1,4 @@
+---
+dependencies:
+  - role: powershell
+    when: ansible_system == "Win32NT"

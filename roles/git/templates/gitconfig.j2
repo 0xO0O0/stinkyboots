@@ -1,0 +1,24 @@
+# Git configuration file.
+#
+# For more information, visit https://git-scm.com/docs/git-config.
+
+[core]
+    autocrlf = input
+    editor = hx
+    pager = delta
+[delta]
+    line-numbers = true
+    navigate = true
+[diff]
+    colorMoved = default
+[init]
+    defaultBranch = main
+[interactive]
+    diffFilter = delta --color-only
+[merge]
+    conflictstyle = diff3
+[pull]
+    rebase = false
+[user]
+    email = {{ git_user_email }}
+    name = {{ git_user_name }}

@@ -1,0 +1,38 @@
+---
+- name: Install Google Chrome for Debian
+  ansible.builtin.apt:
+    deb: https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+  become: true
+  when: ansible_pkg_mgr == "apt" and system_architecture == "amd64"
+
+- name: Add Google GPG key for Fedora and Suse
+  ansible.builtin.rpm_key:
+    key: https://dl.google.com/linux/linux_signing_key.pub
+  become: true
+  when: ansible_pkg_mgr in ["dnf", "zypper"] and system_architecture == "amd64"
+
+- name: Install Google Chrome for Fedora
+  ansible.builtin.dnf:
+    name: >-
+      https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
+  become: true
+  when: ansible_pkg_mgr == "dnf" and system_architecture == "amd64"
+
+- name: Install Google Chrome for MacOS
+  community.general.homebrew_cask:
+    accept_external_apps: true
+    name: google-chrome
+    state: present
+  when: ansible_system == "Darwin"
+
+- name: Install Google Chrome for Suse
+  become: true
+  community.general.zypper:
+    name: >-
+      https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
+  when: ansible_pkg_mgr == "zypper" and system_architecture == "amd64"
+
+- name: Install Google Chrome for Windows
+  community.windows.win_scoop:
+    name: googlechrome
+  when: ansible_system == "Win32NT"

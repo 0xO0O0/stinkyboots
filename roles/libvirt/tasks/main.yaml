@@ -1,0 +1,52 @@
+---
+- name: Install Libvirt for Alpine
+  become: true
+  community.general.apk:
+    name: libvirt-client
+  when: ansible_pkg_mgr == "apk"
+
+- name: Install Libvirt for Arch
+  become: true
+  community.general.pacman:
+    name:
+      - libvirt
+      - virt-install
+      - virt-viewer
+  when: ansible_pkg_mgr == "pacman"
+
+- name: Install Libvirt for Debian
+  ansible.builtin.apt:
+    name:
+      - libvirt-clients
+      - libvirt-daemon-system
+      - virt-viewer
+      - virtinst
+  become: true
+  when: ansible_pkg_mgr == "apt"
+
+- name: Install Libvirt for FreeBSD
+  become: true
+  community.general.pkgng:
+    name: libvirt
+  when: ansible_system == "FreeBSD"
+
+- name: Install Libvirt for Fedora
+  ansible.builtin.dnf:
+    name:
+      - libvirt
+      - virt-viewer
+  become: true
+  when: ansible_pkg_mgr == "dnf"
+
+- name: Install Libvirt for MacOS
+  community.general.homebrew:
+    name: libvirt
+  when: ansible_system == "Darwin"
+
+- name: Install Libvirt for Suse
+  become: true
+  community.general.zypper:
+    name:
+      - libvirt
+      - virt-viewer
+  when: ansible_pkg_mgr == "zypper"

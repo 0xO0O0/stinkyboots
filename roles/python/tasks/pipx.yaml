@@ -1,0 +1,54 @@
+---
+# FreeBSD py39-pipx package is often broken.
+- name: Install Pipx for FreeBSD
+  become: true
+  ansible.builtin.command: /usr/local/bin/python3 -m pip install --upgrade pipx
+  when: ansible_system == "FreeBSD"
+
+- name: Install Pipx for Linux
+  ansible.builtin.command: /usr/bin/python3 -m pip install --upgrade pipx
+  become: true
+  when: ansible_system == "Linux"
+
+- name: Install Pipx for MacOS
+  community.general.homebrew:
+    name: pipx
+  when: ansible_system == "Darwin"
+
+- name: Update user path to include Pipx binaries for Windows
+  ansible.windows.win_path:
+    elements: "{{ ansible_env.HOME }}\\.local\\bin"
+    scope: user
+  when: ansible_system == "Win32NT"
+
+- name: Install Pipx for Windows
+  ansible.windows.win_command: python -m pip install --upgrade pipx
+  environment:
+    Path: "{{ scoop_apps }}\\python\\current;{{ ansible_env.Path }}"
+  when: ansible_system == "Win32NT"
+
+- name: Install Pipx command line applications for Unix
+  # Ansible lint variable spacing is ignored since it incorrectly thinks that
+  # the or operator, i.e. ||, is a Jinja filter that needs an extra space.
+  # Prettier is ignored since it removes the required extra space before the
+  # Ansible lint ignore comment.
+  # prettier-ignore
+  ansible.builtin.shell:  # noqa jinja[spacing]
+    # Pipx installation can break if associated Python interpreter is updated.
+    # If so a new installation should overwrite the current.
+    cmd: >-
+      pipx install {{ item }} || pipx upgrade {{ item }} || pipx install --force
+      {{ item }}
+    executable: "{{ bash_executable }}"
+  loop: "{{ pipx_applications }}"
+  when: ansible_system != "Win32NT"
+
+- name: Install Pipx command line applications for Windows
+  # Pipx installation can break if associated Python interpreter is updated.
+  # If so a new installation should overwrite the current.
+  ansible.windows.win_shell: |
+    (pipx install {{ item }}) -Or (pipx upgrade {{ item }}) -Or (pipx install --force {{ item }})
+  environment:
+    Path: "{{ scoop_apps }}\\python\\current\\\\Scripts;{{ ansible_env.Path }}"
+  loop: "{{ pipx_applications }}"
+  when: ansible_system == "Win32NT"

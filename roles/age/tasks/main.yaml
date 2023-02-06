@@ -1,0 +1,48 @@
+---
+- name: Get latest Age version
+  ansible.builtin.uri:
+    method: GET
+    return_content: true
+    url: https://formulae.brew.sh/api/formula/age.json
+  register: age_formula
+  when: ansible_system == "Linux"
+
+- name: Install Age for FreeBSD
+  become: true
+  community.general.pkgng:
+    name: age
+  when: ansible_system == "FreeBSD"
+
+- name: Download Age for Linux
+  ansible.builtin.unarchive:
+    dest: /tmp/
+    mode: "777"
+    remote_src: true
+    src: >-
+      https://github.com/FiloSottile/age/releases/download/v{{
+      age_formula.json.versions.stable }}//age-v{{
+      age_formula.json.versions.stable }}-linux-{{ system_architecture }}.tar.gz
+  become: true
+  when: ansible_system == "Linux"
+
+- name: Install Age for Linux
+  ansible.builtin.copy:
+    dest: "/usr/local/bin/{{ item }}"
+    mode: "755"
+    remote_src: true
+    src: "/tmp/age/{{ item }}"
+  become: true
+  loop:
+    - age
+    - age-keygen
+  when: ansible_system == "Linux"
+
+- name: Install Age for MacOS
+  community.general.homebrew:
+    name: age
+  when: ansible_system == "Darwin"
+
+- name: Install Age for Windows
+  community.windows.win_scoop:
+    name: age
+  when: ansible_system == "Win32NT"

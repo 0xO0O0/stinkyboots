@@ -1,0 +1,44 @@
+---
+- name: Get latest Scc version
+  ansible.builtin.uri:
+    method: GET
+    return_content: true
+    url: https://formulae.brew.sh/api/formula/scc.json
+  register: scc_formula
+  when: ansible_system == "Linux"
+
+- name: Download Scc for Linux
+  ansible.builtin.unarchive:
+    dest: /tmp/
+    mode: "777"
+    remote_src: true
+    src: >-
+      https://github.com/boyter/scc/releases/download/v{{
+      scc_formula.json.versions.stable }}/scc_{{
+      scc_formula.json.versions.stable }}_Linux_{{ scc_arch[system_architecture]
+      }}.tar.gz
+  become: true
+  vars:
+    scc_arch:
+      amd64: x86_64
+      arm64: arm64
+  when: ansible_system == "Linux"
+
+- name: Install Croc for Linux
+  ansible.builtin.copy:
+    dest: /usr/local/bin/scc
+    mode: "755"
+    remote_src: true
+    src: /tmp/scc
+  become: true
+  when: ansible_system == "Linux"
+
+- name: Install Scc for MacOS
+  community.general.homebrew:
+    name: scc
+  when: ansible_system == "Darwin"
+
+- name: Install Scc for Windows
+  community.windows.win_scoop:
+    name: scc
+  when: ansible_system == "Win32NT"

@@ -1,0 +1,76 @@
+---
+- name: Get latest Git Delta version
+  ansible.builtin.uri:
+    method: GET
+    return_content: true
+    url: https://formulae.brew.sh/api/formula/git-delta.json
+  register: git_delta_formula
+  when: ansible_system == "Linux"
+
+- name: Install Git for FreeBSD
+  become: true
+  community.general.pkgng:
+    name:
+      - git
+      - git-delta
+      - git-lfs
+  when: ansible_system == "FreeBSD"
+
+- name: Install Git for Linux
+  ansible.builtin.package:
+    name:
+      - git
+      - git-lfs
+  become: true
+  when: ansible_system == "Linux"
+
+- name: Download Git Delta for Linux
+  ansible.builtin.unarchive:
+    dest: /tmp/
+    mode: "755"
+    remote_src: true
+    src: >-
+      https://github.com/dandavison/delta/releases/download/{{
+      git_delta_formula.json.versions.stable }}/delta-{{
+      git_delta_formula.json.versions.stable }}-{{
+      _git_delta_arch[system_architecture] }}-unknown-linux-{{ _git_delta_env
+      }}.tar.gz
+  become: true
+  when: ansible_system == "Linux"
+
+- name: Install Git Delta for Linux
+  ansible.builtin.copy:
+    dest: /usr/local/bin/delta
+    mode: "755"
+    remote_src: true
+    src: >-
+      /tmp/delta-{{ git_delta_formula.json.versions.stable }}-{{
+      _git_delta_arch[system_architecture] }}-unknown-linux-{{ _git_delta_env
+      }}/delta
+  become: true
+  when: ansible_system == "Linux"
+
+- name: Install Git for MacOS
+  community.general.homebrew:
+    name:
+      - git
+      - git-delta
+      - git-lfs
+  when: ansible_system == "Darwin"
+
+- name: Install Git for Windows
+  community.windows.win_scoop:
+    name:
+      - delta
+      - git
+      - git-lfs
+      - posh-git
+  when: ansible_system == "Win32NT"
+
+- name: Copy Git configuration file
+  ansible.builtin.template:
+    dest: "{{ ansible_env.HOME }}/.gitconfig"
+    force: true
+    mode: "644"
+    owner: "{{ ansible_user_id }}"
+    src: gitconfig.j2

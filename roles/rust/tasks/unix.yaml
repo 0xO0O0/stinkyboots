@@ -1,0 +1,99 @@
+---
+- name: Get latest Cargo Binstall version
+  ansible.builtin.uri:
+    method: GET
+    return_content: true
+    url: https://api.github.com/repos/ryankurte/cargo-binstall/releases/latest
+  register: cargo_binstall_release
+  when: ansible_system in ["Darwin", "Linux"]
+
+- name: Install Rust and Cargo applications for Unix
+  environment:
+    PATH: >-
+      {{ ansible_env.HOME }}/.cargo/bin:{{ ansible_env.HOME }}/.local/bin:{{
+      ansible_env.PATH }}
+  block:
+    - name: Install Rust for Unix
+      # prettier-ignore
+      ansible.builtin.shell:  # noqa command-instead-of-module
+        cmd: >-
+          curl -Sfs --proto '=https' --tlsv1.2 https://sh.rustup.rs | sh -s --
+          -y --no-modify-path
+        creates: "{{ ansible_env.HOME }}/.cargo/bin/rustup"
+
+    - name: Update Rust for Unix
+      ansible.builtin.command: "{{ item }}"
+      changed_when: "' changed' in rustup_update.stdout"
+      failed_when: >-
+        rustup_update.rc != 0 and 'update is disabled' not in
+        rustup_update.stderr
+      loop:
+        - rustup self update
+        - rustup update stable
+      register: rustup_update
+
+    - name: Add Rust components for Unix
+      ansible.builtin.command: "rustup component add {{ item }}"
+      changed_when: "'installing' in rustup_component.stdout"
+      loop: "{{ rustup_components }}"
+      register: rustup_component
+
+    - name: Add Rust targets for Unix
+      ansible.builtin.command: "rustup target add {{ item }}"
+      changed_when: "'installing' in rustup_target.stdout"
+      loop: "{{ rustup_targets }}"
+      register: rustup_target
+
+    - name: Create Cargo Binstall applications directory for Unix
+      ansible.builtin.file:
+        mode: "755"
+        owner: "{{ ansible_user_id }}"
+        path: "{{ ansible_env.HOME }}/.local/bin"
+        state: directory
+      when: ansible_system in ["Darwin", "Linux"]
+
+    - name: Download Cargo Binstall for Amd64 Unix
+      ansible.builtin.unarchive:
+        dest: /tmp/
+        mode: "755"
+        remote_src: true
+        src: >-
+          https://github.com/ryankurte/cargo-binstall/releases/download/{{
+          cargo_binstall_release.json.tag_name }}/cargo-binstall-{{
+          cargo_binstall_arch[system_architecture] }}-{{
+          cargo_binstall_suffix[ansible_system] }}
+      become: true
+      vars:
+        cargo_binstall_arch:
+          amd64: x86_64
+          arm64: aarch64
+        cargo_binstall_suffix:
+          Darwin: apple-darwin.zip
+          Linux: >-
+            unknown-linux-{{ 'musl' if ansible_pkg_mgr == 'apk' else 'gnu'
+            }}.tgz
+      when: ansible_system in ["Darwin", "Linux"]
+
+    - name: Install Cargo Binstall for Amd64 Unix
+      ansible.builtin.copy:
+        dest: "{{ ansible_env.HOME }}/.local/bin/cargo-binstall"
+        mode: "755"
+        remote_src: true
+        src: /tmp/cargo-binstall
+      become: true
+      when: ansible_system in ["Darwin", "Linux"]
+
+    # TODO: Integrate when Cargo Binstall no longer has OpenSSL issues on
+    # multiple platforms.
+    # - name: Update or install Cargo packages for Amd64 Unix
+    #   ansible.builtin.command: "cargo binstall --no-confirm {{ item }}"
+    #   changed_when: "'This will install' in cargo_binstall.stdout"
+    #   loop: "{{ cargo_applications }}"
+    #   register: cargo_binstall
+    #   when: ansible_system in ["Darwin", "Linux"]
+
+    - name: Update or install Cargo packages for Unix
+      ansible.builtin.command: "cargo install {{ item }}"
+      changed_when: "'Installing' in cargo_install.stdout"
+      loop: "{{ cargo_applications }}"
+      register: cargo_install

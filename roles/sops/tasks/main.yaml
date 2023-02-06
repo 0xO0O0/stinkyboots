@@ -1,0 +1,60 @@
+---
+- name: Get latest Sops version
+  ansible.builtin.uri:
+    method: GET
+    return_content: true
+    url: https://formulae.brew.sh/api/formula/sops.json
+  register: sops_formula
+  when: ansible_system == "Linux"
+
+- name: Install Sops For Debian
+  ansible.builtin.apt:
+    deb: >-
+      https://github.com/mozilla/sops/releases/download/v{{
+      sops_formula.json.versions.stable }}/sops_{{
+      sops_formula.json.versions.stable }}_{{ system_architecture }}.deb
+  become: true
+  when: ansible_pkg_mgr == "apt"
+
+- name: Install Sops For Fedora
+  ansible.builtin.dnf:
+    disable_gpg_check: true
+    name: >-
+      https://github.com/mozilla/sops/releases/download/v{{
+      sops_formula.json.versions.stable }}/sops-{{
+      sops_formula.json.versions.stable }}-1.{{
+      sops_fedora_arch[system_architecture] }}.rpm
+  become: true
+  vars:
+    sops_fedora_arch:
+      amd64: x86_64
+      arm64: aarch64
+  when: ansible_pkg_mgr == "dnf"
+
+- name: Install Sops for FreeBSD
+  become: true
+  community.general.pkgng:
+    name: sops
+  when: ansible_system == "FreeBSD"
+
+- name: Install Sops for Linux
+  ansible.builtin.get_url:
+    dest: /usr/local/bin/sops
+    mode: "755"
+    owner: root
+    url: >-
+      https://github.com/mozilla/sops/releases/download/v{{
+      sops_formula.json.versions.stable }}/sops-v{{
+      sops_formula.json.versions.stable }}.linux.{{ system_architecture }}
+  become: true
+  when: ansible_system == "Linux" and ansible_pkg_mgr not in ["apt", "dnf"]
+
+- name: Install Sops for MacOS
+  community.general.homebrew:
+    name: sops
+  when: ansible_system == "Darwin"
+
+- name: Install Sops for Windows
+  community.windows.win_scoop:
+    name: sops
+  when: ansible_system == "Win32NT"

@@ -1,0 +1,53 @@
+---
+- name: Get latest Digital Ocean CLI version
+  ansible.builtin.uri:
+    method: GET
+    return_content: true
+    url: https://formulae.brew.sh/api/formula/doctl.json
+  register: doctl_formula
+  when: ansible_system == "Linux"
+
+- name: Install Digital Ocean CLI for FreeBSD
+  become: true
+  community.general.pkgng:
+    name: doctl
+  when: ansible_system == "FreeBSD"
+
+- name: Install Digital Ocean CLI for Linux
+  ansible.builtin.unarchive:
+    dest: /usr/local/bin/
+    mode: "755"
+    owner: root
+    remote_src: true
+    src: >-
+      https://github.com/digitalocean/doctl/releases/download/v{{
+      doctl_formula.json.versions.stable }}/doctl-{{
+      doctl_formula.json.versions.stable }}-linux-{{ system_architecture
+      }}.tar.gz
+  become: true
+  when: ansible_system == "Linux"
+
+- name: Install Digital Ocean CLI for MacOS
+  community.general.homebrew:
+    name: doctl
+  when: ansible_system == "Darwin"
+
+- name: Install Digital Ocean CLI for Windows
+  community.windows.win_scoop:
+    name: doctl
+  when: ansible_system == "Win32NT"
+
+- name: Create Fish completions directory for Unix
+  ansible.builtin.file:
+    mode: "755"
+    owner: "{{ ansible_user_id }}"
+    path: "{{ ansible_env.HOME }}/.config/fish/completions"
+    state: directory
+  when: ansible_system != "Win32NT"
+
+- name: Install Digital Ocean CLI Fish completion for Unix
+  ansible.builtin.shell:
+    cmd: >-
+      doctl completion fish > {{ ansible_env.HOME
+      }}/.config/fish/completions/doctl.fish
+  when: ansible_system != "Win32NT"

@@ -1,0 +1,34 @@
+---
+- name: Get latest Hadolint version
+  ansible.builtin.uri:
+    method: GET
+    return_content: true
+    url: https://formulae.brew.sh/api/formula/hadolint.json
+  register: hadolint_formula
+  when: ansible_system == "Linux"
+
+- name: Install Hadolint for Linux
+  ansible.builtin.get_url:
+    dest: /usr/local/bin/hadolint
+    mode: "755"
+    owner: root
+    url: >-
+      https://github.com/hadolint/hadolint/releases/download/v{{
+      hadolint_formula.json.versions.stable }}/hadolint-Linux-{{
+      hadolint_arch[system_architecture] }}
+  become: true
+  vars:
+    hadolint_arch:
+      amd64: x86_64
+      arm64: arm64
+  when: ansible_system == "Linux"
+
+- name: Install Hadolint for MacOS
+  community.general.homebrew:
+    name: hadolint
+  when: ansible_system == "Darwin"
+
+- name: Install Hadolint for Windows
+  community.windows.win_scoop:
+    name: hadolint
+  when: ansible_system == "Win32NT"

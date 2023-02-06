@@ -1,0 +1,61 @@
+---
+- name: Get latest Helm version
+  ansible.builtin.uri:
+    method: GET
+    return_content: true
+    url: https://formulae.brew.sh/api/formula/helm.json
+  register: helm_formula
+  when: ansible_system == "Linux"
+
+- name: Install Helm for FreeBSD
+  become: true
+  community.general.pkgng:
+    name: helm
+  when: ansible_system == "FreeBSD"
+
+- name: Download Helm for Linux
+  ansible.builtin.unarchive:
+    dest: /tmp/
+    mode: "777"
+    remote_src: true
+    src: >-
+      https://get.helm.sh/helm-v{{ helm_formula.json.versions.stable }}-linux-{{
+      system_architecture }}.tar.gz
+  become: true
+  when: ansible_system == "Linux"
+
+- name: Install Helm for Linux
+  ansible.builtin.copy:
+    dest: /usr/local/bin/helm
+    mode: "755"
+    owner: root
+    remote_src: true
+    src: /tmp/linux-{{ system_architecture }}/helm
+  become: true
+  when: ansible_system == "Linux"
+
+- name: Install Helm for MacOS
+  community.general.homebrew:
+    name: helm
+  when: ansible_system == "Darwin"
+
+- name: Install Helm for Windows
+  community.windows.win_scoop:
+    name: helm
+  when: ansible_system == "Win32NT"
+
+- name: Install Helm plugins for Unix
+  ansible.builtin.command: "helm plugin install {{ item }}"
+  failed_when: >-
+    helm_plugin.rc != 0 and 'plugin already exists' not in helm_plugin.stderr
+  loop: "{{ helm_plugins }}"
+  register: helm_plugin
+  when: ansible_system != "Win32NT"
+
+- name: Install Helm plugins for Windows
+  ansible.windows.win_command: "helm plugin install {{ item }}"
+  failed_when: >-
+    helm_plugin.rc != 0 and 'plugin already exists' not in helm_plugin.stderr
+  loop: "{{ helm_plugins }}"
+  register: helm_plugin
+  when: ansible_system == "Win32NT"
