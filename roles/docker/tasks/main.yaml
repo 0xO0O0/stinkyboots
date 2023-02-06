@@ -25,7 +25,7 @@
   ansible.builtin.get_url:
     dest: /tmp/docker-archive-keyring.gpg
     mode: "644"
-    url: https://download.docker.com/linux/gpg
+    url: https://download.docker.com/linux/debian/gpg
   become: true
   when: ansible_pkg_mgr == "apt"
 
