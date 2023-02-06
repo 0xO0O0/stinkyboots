@@ -43,8 +43,7 @@
     repo: >-
       deb [arch={{ system_architecture }}
       signed-by=/usr/share/keyrings/docker-archive-keyring.gpg]
-      https://download.docker.com/linux/debian/dist/bullseye {{
-      ansible_distribution_release | lower }} stable
+      https://download.docker.com/linux/debian/dist/bullseye stable
     state: present
     filename: docker
   become: true
